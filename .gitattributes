@@ -1,0 +1,6 @@
+*.dart text eol=lf
+
+# GitHub上で自動生成ファイルのdiffを無視するための設定
+# 詳細: https://docs.github.com/ja/repositories/working-with-files/managing-files/customizing-how-changed-files-appear-on-github
+*.freezed.dart linguist-generated=true
+*.g.dart linguist-generated=true
