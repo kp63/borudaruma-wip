@@ -88,6 +88,7 @@ class _WallAddScreenState extends State<WallAddScreen> {
     final wall = Wall.create(
       uuid: const Uuid().v4(),
       name: _nameController.text.trim(),
+      description: '',
       imagePath: savedImagePath,
     );
 
@@ -117,29 +118,38 @@ class _WallAddScreenState extends State<WallAddScreen> {
           key: _formKey,
           child: Column(
             children: [
-              TextFormField(
-                controller: _nameController,
-                decoration: const InputDecoration(labelText: '壁の名前'),
-                validator: (value) {
-                  if (value != null && value.trim().isNotEmpty) {
-                    if (value.trim().length > 255) {
-                      return '名前は255文字以内で入力してください';
-                    }
-                  }
-                  return null;
-                },
+              Expanded(
+                child: SingleChildScrollView(
+                  child: Column(
+                    children: [
+                      TextFormField(
+                        controller: _nameController,
+                        decoration: const InputDecoration(labelText: '壁の名前'),
+                        validator: (value) {
+                          if (value != null && value.trim().isNotEmpty) {
+                            if (value.trim().length > 255) {
+                              return '名前は255文字以内で入力してください';
+                            }
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 12),
+                      _selectedImage != null
+                          ? Image.file(_selectedImage!,
+                              width: 200, height: 200)
+                          : const Text('画像が選択されていません'),
+                      const SizedBox(height: 12),
+                      OutlinedButton.icon(
+                        onPressed: _showImageSourceActionSheet,
+                        icon: const Icon(Icons.photo_library),
+                        label: const Text('画像を選択'),
+                      ),
+                    ],
+                  ),
+                ),
               ),
-              const SizedBox(height: 12),
-              _selectedImage != null
-                  ? Image.file(_selectedImage!, width: 200, height: 200)
-                  : const Text('画像が選択されていません'),
-              const SizedBox(height: 12),
-              OutlinedButton.icon(
-                onPressed: _showImageSourceActionSheet,
-                icon: const Icon(Icons.photo_library),
-                label: const Text('画像を選択'),
-              ),
-              const Spacer(),
+              const SizedBox(height: 16),
               FloatingActionButton.extended(
                 onPressed: _saveWall,
                 icon: const Icon(Icons.save),

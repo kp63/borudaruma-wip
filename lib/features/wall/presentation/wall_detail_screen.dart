@@ -1,6 +1,6 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:borudaruma/features/wall/presentation/widgets/wall_image_display.dart';
 import '../data/wall_repository.dart';
 import '../model/wall.dart';
 
@@ -15,57 +15,111 @@ class WallDetailScreen extends StatefulWidget {
 
 class _WallDetailScreenState extends State<WallDetailScreen> {
   late final WallRepository _repository;
-  late Future<Wall?> _wallFuture;
+  Wall? _wall;
+  late TextEditingController _descriptionController;
+  late FocusNode _descriptionFocusNode;
 
   @override
   void initState() {
     super.initState();
     _repository = WallRepository();
-    _wallFuture = _repository.getWallByUuid(widget.uuid);
-  }
+    _descriptionController = TextEditingController();
+    _descriptionFocusNode = FocusNode();
 
-  void _reloadWall() {
-    setState(() {
-      _wallFuture = _repository.getWallByUuid(widget.uuid);
+    _loadWall();
+
+    _descriptionFocusNode.addListener(() {
+      if (!_descriptionFocusNode.hasFocus) {
+        // When focus is lost, save the description
+        _saveDescription();
+      }
     });
   }
 
-  Future<void> _editWallName(Wall wall) async {
-    final controller = TextEditingController(text: wall.name);
+  Future<void> _loadWall() async {
+    _wall = await _repository.getWallByUuid(widget.uuid);
+    if (mounted) {
+      setState(() {
+        _descriptionController.text = _wall?.description ?? '';
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _descriptionController.dispose();
+    _descriptionFocusNode.dispose();
+    super.dispose();
+  }
+
+  
+
+  Future<void> _editWallName() async {
+    if (_wall == null) return;
+    final controller = TextEditingController(text: _wall!.name);
     final newName = await showDialog<String>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('壁の名前を編集'),
+        title: const Text('名称を変更'),
         content: TextField(
           controller: controller,
           autofocus: true,
-          decoration: const InputDecoration(hintText: '新しい名前'),
+          decoration: const InputDecoration(hintText: '新しい名称'),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
             child: const Text('キャンセル'),
           ),
-          TextButton(
+          ElevatedButton(
             onPressed: () => Navigator.pop(context, controller.text),
-            child: const Text('保存'),
+            child: const Text('変更'),
           ),
         ],
       ),
     );
 
     if (newName != null && newName.isNotEmpty) {
-      final updatedWall = wall.copyWith(name: newName);
+      final updatedWall = _wall!.copyWith(name: newName);
       await _repository.updateWall(updatedWall);
-      _reloadWall();
+      setState(() {
+        _wall = updatedWall;
+      });
+    }
+  }
+
+  Future<void> _saveDescription() async {
+    if (_wall == null) return;
+
+    final newDescription = _descriptionController.text;
+    if (newDescription != _wall!.description) {
+      final updatedWall = _wall!.copyWith(description: newDescription);
+      await _repository.updateWall(updatedWall);
+      setState(() {
+        _wall = updatedWall;
+      });
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    if (_wall == null) {
+      return Scaffold(
+        appBar: AppBar(
+          title: const Text('ウォール詳細'),
+        ),
+        body: const Center(child: CircularProgressIndicator()),
+      );
+    }
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('壁の詳細'),
+        title: Text(
+          _wall!.name.isNotEmpty ? _wall!.name : 'ウォール #${_wall!.id}',
+          style: TextStyle(
+            color: _wall!.name.isNotEmpty ? Colors.black : Colors.grey[600],
+          ),
+        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.delete),
@@ -98,71 +152,49 @@ class _WallDetailScreenState extends State<WallDetailScreen> {
           ),
         ],
       ),
-      body: FutureBuilder<Wall?>(
-        future: _wallFuture,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState != ConnectionState.done) {
-            return const Center(child: CircularProgressIndicator());
-          }
-
-          final wall = snapshot.data;
-          if (wall == null) {
-            return const Center(child: Text('壁が見つかりません'));
-          }
-
-          return Column(
-            children: [
-              Expanded(
-                child: Image.file(
-                  File(wall.imagePath),
-                  width: double.infinity,
-                  fit: BoxFit.contain,
-                  errorBuilder: (context, error, stackTrace) =>
-                      const Center(child: Icon(Icons.broken_image)),
+      body: SingleChildScrollView(
+        child: Column(
+          children: [
+            WallImageDisplay(
+              imagePath: _wall!.imagePath,
+            ),
+            ListTile(
+              title: Text(
+                _wall!.name.isNotEmpty ? _wall!.name : 'ウォール #${_wall!.id}',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  color: _wall!.name.isNotEmpty
+                      ? Colors.black
+                      : Colors.grey[600],
+                  fontWeight: FontWeight.bold,
+                  fontSize: 18,
                 ),
               ),
-              InkWell(
-                onTap: () => _editWallName(wall),
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        wall.name.isNotEmpty ? wall.name : 'Wall #${wall.id}',
-                        style: Theme.of(context).textTheme.headlineSmall,
-                      ),
-                      const SizedBox(width: 8),
-                      const Icon(Icons.edit, size: 20),
-                    ],
-                  ),
+              trailing: const Icon(Icons.edit, size: 20),
+              onTap: () => _editWallName(),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: TextField(
+                controller: _descriptionController..text = _wall!.description,
+                focusNode: _descriptionFocusNode,
+                decoration: const InputDecoration(
+                  labelText: '備考',
+                  hintText: '説明を追加',
+                  border: OutlineInputBorder(),
                 ),
+                maxLines: null,
+                keyboardType: TextInputType.multiline,
+                onSubmitted: (value) => _saveDescription(),
               ),
-              const SizedBox(height: 16),
-              ElevatedButton(
-                onPressed: () {
-                  // 編集画面への遷移（未実装）
-                  showDialog(
-                    context: context,
-                    builder: (context) => AlertDialog(
-                      title: const Text('Sorry'),
-                      content: const Text('この機能はまだ実装されていません。'),
-                      actions: [
-                        TextButton(
-                          onPressed: () => context.pop(),
-                          child: const Text('OK'),
-                        ),
-                      ],
-                    ),
-                  );
-                },
-                child: const Text('編集'),
-              ),
-              const SizedBox(height: 16),
-              // TODO: 課題・ホールド管理への導線
-            ],
-          );
-        },
+            ),
+
+            const SizedBox(height: 100),
+
+            // TODO: 課題・ホールド管理への導線
+          ],
+        ),
       ),
     );
   }
