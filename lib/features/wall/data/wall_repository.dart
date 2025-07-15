@@ -31,15 +31,15 @@ class WallRepository {
     return walls;
   }
 
-  Future<Wall?> getWallByUuid(String uuid) async {
+  Future<Wall?> getWallById(int id) async {
     final isar = await _db;
-    return await isar.walls.filter().uuidEqualTo(uuid).findFirst();
+    return await isar.walls.filter().idEqualTo(id).findFirst();
   }
 
-  Future<void> deleteWall(String uuid) async {
+  Future<void> deleteWall(int id) async {
     final isar = await _db;
     await isar.writeTxn(() async {
-      await isar.walls.filter().uuidEqualTo(uuid).deleteAll();
+      await isar.walls.filter().idEqualTo(id).deleteAll();
     });
   }
 

@@ -5,19 +5,10 @@ plugins {
     id("dev.flutter.flutter-gradle-plugin")
 }
 
-// local.propertiesからndkVersionを取得
-val localNdkVersion: String? = rootProject.file("local.properties").let { file ->
-  if (file.exists()) {
-    val props = java.util.Properties().apply { load(file.inputStream()) }
-    props.getProperty("ndkVersion")
-  } else null
-}
-
 android {
     namespace = "dev.sawaki.borudaruma"
     compileSdk = flutter.compileSdkVersion
-    // 非推奨: 使用するndkVersionを変更したい場合は、<ProjectRoot>/local.propertiesにて設定できます
-    ndkVersion = localNdkVersion ?: "27.0.12077973"
+    ndkVersion = "27.0.12077973"
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11

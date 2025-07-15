@@ -33,10 +33,10 @@ final appRouter = GoRouter(
       builder: (context, state) => const WallAddScreen(),
     ),
     GoRoute(
-      path: '/walls/detail/:uuid',
+      path: '/walls/detail/:id',
       builder: (context, state) {
-        final uuid = state.pathParameters['uuid']!;
-        return WallDetailScreen(uuid: uuid);
+        final id = int.parse(state.pathParameters['id']!);
+        return WallDetailScreen(id: id);
       },
     ),
   ],

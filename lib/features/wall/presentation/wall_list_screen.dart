@@ -89,7 +89,7 @@ class _WallListScreenState extends State<WallListScreen> {
                       color: Colors.transparent,
                       child: InkWell(
                         onTap: () async {
-                          await context.push('/walls/detail/${wall.uuid}');
+                          await context.push('/walls/detail/${wall.id}');
                           _reloadWalls(); // 詳細画面から戻ってきたときに再読込
                         },
                         onLongPress: () async {
@@ -119,7 +119,6 @@ class _WallListScreenState extends State<WallListScreen> {
                             },
                           );
 
-
                           if (confirm == true) {
                             try {
                               // 画像ファイルを削除
@@ -129,7 +128,7 @@ class _WallListScreenState extends State<WallListScreen> {
                               }
 
                               // データベースから削除
-                              await _repository.deleteWall(wall.uuid);
+                              await _repository.deleteWall(wall.id);
                               _reloadWalls();
 
                               messenger.showSnackBar(

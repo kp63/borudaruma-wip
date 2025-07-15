@@ -31,11 +31,6 @@ const WallSchema = CollectionSchema(
       id: 2,
       name: r'name',
       type: IsarType.string,
-    ),
-    r'uuid': PropertySchema(
-      id: 3,
-      name: r'uuid',
-      type: IsarType.string,
     )
   },
   estimateSize: _wallEstimateSize,
@@ -61,7 +56,6 @@ int _wallEstimateSize(
   bytesCount += 3 + object.description.length * 3;
   bytesCount += 3 + object.imagePath.length * 3;
   bytesCount += 3 + object.name.length * 3;
-  bytesCount += 3 + object.uuid.length * 3;
   return bytesCount;
 }
 
@@ -74,7 +68,6 @@ void _wallSerialize(
   writer.writeString(offsets[0], object.description);
   writer.writeString(offsets[1], object.imagePath);
   writer.writeString(offsets[2], object.name);
-  writer.writeString(offsets[3], object.uuid);
 }
 
 Wall _wallDeserialize(
@@ -88,7 +81,6 @@ Wall _wallDeserialize(
   object.id = id;
   object.imagePath = reader.readString(offsets[1]);
   object.name = reader.readString(offsets[2]);
-  object.uuid = reader.readString(offsets[3]);
   return object;
 }
 
@@ -104,8 +96,6 @@ P _wallDeserializeProp<P>(
     case 1:
       return (reader.readString(offset)) as P;
     case 2:
-      return (reader.readString(offset)) as P;
-    case 3:
       return (reader.readString(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -639,134 +629,6 @@ extension WallQueryFilter on QueryBuilder<Wall, Wall, QFilterCondition> {
       ));
     });
   }
-
-  QueryBuilder<Wall, Wall, QAfterFilterCondition> uuidEqualTo(
-    String value, {
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'uuid',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<Wall, Wall, QAfterFilterCondition> uuidGreaterThan(
-    String value, {
-    bool include = false,
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'uuid',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<Wall, Wall, QAfterFilterCondition> uuidLessThan(
-    String value, {
-    bool include = false,
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'uuid',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<Wall, Wall, QAfterFilterCondition> uuidBetween(
-    String lower,
-    String upper, {
-    bool includeLower = true,
-    bool includeUpper = true,
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'uuid',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<Wall, Wall, QAfterFilterCondition> uuidStartsWith(
-    String value, {
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.startsWith(
-        property: r'uuid',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<Wall, Wall, QAfterFilterCondition> uuidEndsWith(
-    String value, {
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.endsWith(
-        property: r'uuid',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<Wall, Wall, QAfterFilterCondition> uuidContains(String value,
-      {bool caseSensitive = true}) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.contains(
-        property: r'uuid',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<Wall, Wall, QAfterFilterCondition> uuidMatches(String pattern,
-      {bool caseSensitive = true}) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.matches(
-        property: r'uuid',
-        wildcard: pattern,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<Wall, Wall, QAfterFilterCondition> uuidIsEmpty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'uuid',
-        value: '',
-      ));
-    });
-  }
-
-  QueryBuilder<Wall, Wall, QAfterFilterCondition> uuidIsNotEmpty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        property: r'uuid',
-        value: '',
-      ));
-    });
-  }
 }
 
 extension WallQueryObject on QueryBuilder<Wall, Wall, QFilterCondition> {}
@@ -807,18 +669,6 @@ extension WallQuerySortBy on QueryBuilder<Wall, Wall, QSortBy> {
   QueryBuilder<Wall, Wall, QAfterSortBy> sortByNameDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'name', Sort.desc);
-    });
-  }
-
-  QueryBuilder<Wall, Wall, QAfterSortBy> sortByUuid() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'uuid', Sort.asc);
-    });
-  }
-
-  QueryBuilder<Wall, Wall, QAfterSortBy> sortByUuidDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'uuid', Sort.desc);
     });
   }
 }
@@ -871,18 +721,6 @@ extension WallQuerySortThenBy on QueryBuilder<Wall, Wall, QSortThenBy> {
       return query.addSortBy(r'name', Sort.desc);
     });
   }
-
-  QueryBuilder<Wall, Wall, QAfterSortBy> thenByUuid() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'uuid', Sort.asc);
-    });
-  }
-
-  QueryBuilder<Wall, Wall, QAfterSortBy> thenByUuidDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'uuid', Sort.desc);
-    });
-  }
 }
 
 extension WallQueryWhereDistinct on QueryBuilder<Wall, Wall, QDistinct> {
@@ -904,13 +742,6 @@ extension WallQueryWhereDistinct on QueryBuilder<Wall, Wall, QDistinct> {
       {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'name', caseSensitive: caseSensitive);
-    });
-  }
-
-  QueryBuilder<Wall, Wall, QDistinct> distinctByUuid(
-      {bool caseSensitive = true}) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(r'uuid', caseSensitive: caseSensitive);
     });
   }
 }
@@ -937,12 +768,6 @@ extension WallQueryProperty on QueryBuilder<Wall, Wall, QQueryProperty> {
   QueryBuilder<Wall, String, QQueryOperations> nameProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'name');
-    });
-  }
-
-  QueryBuilder<Wall, String, QQueryOperations> uuidProperty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addPropertyName(r'uuid');
     });
   }
 }

@@ -3,7 +3,6 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:uuid/uuid.dart';
 
 import '../data/wall_repository.dart';
 import '../model/wall.dart';
@@ -86,7 +85,6 @@ class _WallAddScreenState extends State<WallAddScreen> {
     final savedImagePath = await _saveImageLocally(_selectedImage!);
 
     final wall = Wall.create(
-      uuid: const Uuid().v4(),
       name: _nameController.text.trim(),
       description: '',
       imagePath: savedImagePath,
@@ -136,8 +134,7 @@ class _WallAddScreenState extends State<WallAddScreen> {
                       ),
                       const SizedBox(height: 12),
                       _selectedImage != null
-                          ? Image.file(_selectedImage!,
-                              width: 200, height: 200)
+                          ? Image.file(_selectedImage!, width: 200, height: 200)
                           : const Text('画像が選択されていません'),
                       const SizedBox(height: 12),
                       OutlinedButton.icon(

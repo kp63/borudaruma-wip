@@ -1,64 +1,127 @@
 # GEMINI.md
 
-## Project: borudaruma
+## プロジェクト: borudaruma
 
-**Application Name:** The official application name is 「ボルダルマ」. The name "borudaruma" is used for internal or system-specific identifiers where Japanese characters are not suitable.
+**アプリケーション名:** 正式名称は「ボルダルマ」です。日本語文字が適さない内部的またはシステム固有の識別子には "borudaruma" を使用します。
 
-**Description:** A new Flutter project.
+**説明:** ボルダリング愛好家をサポートするために設計されたFlutterアプリケーションです。
 
-This document provides guidelines and conventions for developing the `borudaruma` project, with a focus on testing best practices inspired by Takuto Wada.
+このドキュメントは、`borudaruma`プロジェクトを開発するための基本的なガイドラインと規約を提供します。
 
-## Core Technologies & Libraries
+## 主要な技術とライブラリ
 
-- **Framework:** Flutter
-- **Routing:** `go_router` for declarative navigation.
-- **Local Database:** `isar` for high-performance local data persistence.
-- **Image Handling:** `image_picker` for selecting images from the gallery or camera.
-- **Utilities:**
-  - `uuid`: For generating unique identifiers.
-  - `path_provider`: For accessing standard filesystem locations.
-  - `package_info_plus`: For retrieving application package information.
+このプロジェクトはFlutterで構築されており、`pubspec.yaml`で定義されている以下の主要なパッケージに依存しています:
 
-## Directory Structure
+- **状態管理とルーティング:**
+  - `go_router`: 宣言的でURLベースのナビゲーションを実現します。
+  - 状態管理ライブラリは現在必要性を感じていないので使用していません。もし使用すべきと感じた時にはそう言ってください。
+- **ローカルデータベース:**
+  - `isar` & `xxf_isar_flutter_libs`: 高速なローカルデータ永続化を提供します。
+- **ユーティリティ:**
+  - `image_picker`: ギャラリーやカメラから画像を選択します。
+  - `path_provider`: 標準的なファイルシステムの場所にアクセスします。
+  - `package_info_plus`: アプリケーションのパッケージ情報を取得します。
+  - `app_settings`: デバイスの設定画面を開きます。
+- **アイコン:**
+  - `cupertino_icons`: iOSスタイルのアイコンを提供します。
+  - `flutter_launcher_icons`: アプリケーションのランチャーアイコンを生成します。
 
-The project follows a feature-first directory structure:
+**開発依存関係:**
+- `build_runner`: コードジェネレーターを実行します。
+- `isar_generator`: Isarデータベースのコードを生成します。
+- `flutter_lints`: コードスタイルとベストプラクティスを強制します。
+
+## ディレクトリ構造
+
+プロジェクトは、モジュール性とスケーラビリティを促進するために、feature-firstのディレクトリ構造に従います:
 
 ```
 lib/
-├── core/          # Core functionalities (e.g., routing, utilities)
+├── core/          # コア機能 (ルーティング、ユーティリティなど)
 │   └── router/
-├── features/      # Feature-based modules
+├── features/      # featureベースのモジュール
 │   └── [feature_name]/
-│       ├── data/         # Data sources (e.g., repositories)
-│       ├── model/        # Data models and entities
-│       └── presentation/ # UI (screens, widgets)
-├── shared/        # Shared widgets and utilities
-│   ├── widgets/     # Common UI components (e.g., CustomButton)
-│   └── utils/       # Utility functions
-└── main.dart      # Application entry point
+│       ├── data/         # データソース (リポジトリなど)
+│       ├── model/        # データモデルとエンティティ
+│       └── presentation/ # UI (画面、ウィジェット)
+├── shared/        # 共有ウィジェットとユーティリティ
+│   ├── widgets/     # 共通のUIコンポーネント
+│   └── utils/       # ユーティリティ関数
+└── main.dart      # アプリケーションのエントリーポイント
 ```
 
-### Shared Components
+## 開発ワークフロー
 
-- **Shared Widgets:** Reusable UI components that are not specific to a single feature should be placed in `lib/shared/widgets`.
-- **Shared Utilities:** Application-wide utility functions or classes should be placed in `lib/shared/utils`.
+一貫性とコード品質を確保するために、以下の手順に従ってください。
 
-This approach keeps the `features` directory clean and promotes code reuse.
+### 1. 依存関係のインストール
 
-## Code Generation
-
-This project uses `build_runner` for code generation, primarily for `isar`.
-
-When you modify data models (`*.dart` files annotated with `@collection`), run the following command to regenerate the corresponding `*.g.dart` files:
+まず、次のコマンドを実行して、すべてのパッケージ依存関係が最新であることを確認します:
 
 ```sh
-dart run build_runner build
+flutter pub get
 ```
 
-## Code Style & Linting
+### 2. コード生成の実行
 
-This project uses `flutter_lints` to enforce a consistent code style. Ensure your code adheres to the rules defined in `analysis_options.yaml`. You can check your code against these rules by running:
+このプロジェクトでは、主に`isar`モデルのために`build_runner`を使用します。データモデル（`@collection`でアノテーションが付けられたファイル）を変更した後は、次のコマンドを実行して必要なファイルを再生成します:
+
+```sh
+dart run build_runner build --delete-conflicting-outputs
+```
+
+*ビルドの競合を避けるために `--delete-conflicting-outputs` フラグの使用を推奨します。*
+
+**Note:** `flutter pub run` は非推奨となったため、今後は `dart run` を使用してください。
+
+### 3. コードの静的解析
+
+変更をコミットする前に、リンターを実行して静的解析の問題をチェックします。ルールは `analysis_options.yaml` で定義されています。
 
 ```sh
 flutter analyze
 ```
+
+### 4. テストの実行
+
+すべてのユニットテストとウィジェットテストを実行して、変更が既存の機能を壊していないことを確認します。
+
+```sh
+flutter test
+```
+
+### 5. コード生成の原則
+
+コードを生成する際は、常に以下の点を考慮してください:
+- **品質:** 生成されるコードは、品質を重視し、SOLID原則などを意識して生成してください。
+- **可読性:** 生成されたコードは、人間が容易に理解できるものであるべきです。
+- **保守性:** 将来の変更や拡張が容易に行えるように、コードは整理され、モジュール化されているべきです。
+
+## テストに関する方針
+
+### 基本サイクル：レッド・グリーン・リファクタリング
+
+1.  **レッド (Red):** まず、失敗するテストコードを1つ書きます。
+2.  **グリーン (Green):** 次に、そのテストをパスするための最小限のコードを実装します。
+3.  **リファクタリング (Refactor):** 最後に、テストが通る状態を維持しながら、コードの設計を改善します。
+
+### 実践的プラクティス
+
+- **テストリストから始める:** 実装を始める前に、機能が満たすべき振る舞いをリストアップし、そこから一つずつテストを作成します。
+- **不安をテストに変換する:** コードに対する不安や懸念点は、具体的なテストケースとして表現し、検証可能な状態にします。
+- **一度に一つのことに集中する:** 複雑な問題も細分化し、TDDの各サイクルでは単一の振る舞いに集中します。
+- **テスト容易性を意識する:** テストの書きやすさを考慮した設計を心がけ、テストが困難な場合は設計を見直します。
+- **フィードバックを尊重する:** TDDの短いサイクルから得られるフィードバックを元に、継続的に設計を改善していきます。
+
+自動テストは、単なる品質保証の手段ではなく、**ソフトウェアを変更容易な状態に保ち、ビジネスの変化に迅速に対応するための重要な技術**と位置づけています。
+
+## アセット
+
+- **フォント:** アプリケーションは `pubspec.yaml` で設定されている `Murecho` フォントファミリーを使用します。
+- **アイコン:** メインのアプリケーションアイコンは `assets/icon/icon.png` にあり、`flutter_launcher_icons` パッケージによって管理されます。
+
+## 設定ファイル
+
+- `pubspec.yaml`: プロジェクトのメタデータ、依存関係、およびアセット構成を定義します。
+- `analysis_options.yaml`: Dartアナライザーとリンタールールを設定します。
+- `flutter_launcher_icons.yaml`: さまざまなプラットフォーム用のランチャーアイコンを生成するための構成を指定します。

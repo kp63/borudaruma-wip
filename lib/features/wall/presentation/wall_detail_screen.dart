@@ -5,9 +5,9 @@ import '../data/wall_repository.dart';
 import '../model/wall.dart';
 
 class WallDetailScreen extends StatefulWidget {
-  final String uuid;
+  final int id;
 
-  const WallDetailScreen({super.key, required this.uuid});
+  const WallDetailScreen({super.key, required this.id});
 
   @override
   State<WallDetailScreen> createState() => _WallDetailScreenState();
@@ -37,7 +37,7 @@ class _WallDetailScreenState extends State<WallDetailScreen> {
   }
 
   Future<void> _loadWall() async {
-    _wall = await _repository.getWallByUuid(widget.uuid);
+    _wall = await _repository.getWallById(widget.id);
     if (mounted) {
       setState(() {
         _descriptionController.text = _wall?.description ?? '';
@@ -51,8 +51,6 @@ class _WallDetailScreenState extends State<WallDetailScreen> {
     _descriptionFocusNode.dispose();
     super.dispose();
   }
-
-  
 
   Future<void> _editWallName() async {
     if (_wall == null) return;
@@ -105,9 +103,7 @@ class _WallDetailScreenState extends State<WallDetailScreen> {
   Widget build(BuildContext context) {
     if (_wall == null) {
       return Scaffold(
-        appBar: AppBar(
-          title: const Text('ウォール詳細'),
-        ),
+        appBar: AppBar(title: const Text('ウォール詳細')),
         body: const Center(child: CircularProgressIndicator()),
       );
     }
@@ -143,7 +139,7 @@ class _WallDetailScreenState extends State<WallDetailScreen> {
               );
 
               if (confirm == true) {
-                await _repository.deleteWall(widget.uuid);
+                await _repository.deleteWall(widget.id);
                 if (context.mounted) {
                   context.pop();
                 }
@@ -155,9 +151,7 @@ class _WallDetailScreenState extends State<WallDetailScreen> {
       body: SingleChildScrollView(
         child: Column(
           children: [
-            WallImageDisplay(
-              imagePath: _wall!.imagePath,
-            ),
+            WallImageDisplay(imagePath: _wall!.imagePath),
             ListTile(
               title: Text(
                 _wall!.name.isNotEmpty ? _wall!.name : 'ウォール #${_wall!.id}',
