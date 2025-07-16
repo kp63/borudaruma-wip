@@ -1,6 +1,7 @@
 import 'package:isar/isar.dart';
 import 'package:path_provider/path_provider.dart';
-import '../model/wall.dart';
+
+import 'package:borudaruma/features/wall/model/wall.dart';
 
 class WallRepository {
   static final WallRepository _instance = WallRepository._internal();

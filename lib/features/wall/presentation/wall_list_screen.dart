@@ -1,8 +1,12 @@
-import 'dart:io';
 import 'package:go_router/go_router.dart';
 import 'package:flutter/material.dart';
-import '../data/wall_repository.dart';
-import '../model/wall.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:borudaruma/features/wall/data/wall_service.dart';
+import 'package:borudaruma/features/wall/presentation/widgets/wall_card.dart';
+import 'package:borudaruma/features/wall/presentation/widgets/add_wall_card.dart';
+import 'package:borudaruma/features/wall/data/wall_repository.dart';
+import 'package:borudaruma/features/wall/model/wall.dart';
+import 'dart:io';
 
 class WallListScreen extends StatefulWidget {
   const WallListScreen({super.key});
@@ -13,6 +17,7 @@ class WallListScreen extends StatefulWidget {
 
 class _WallListScreenState extends State<WallListScreen> {
   final _repository = WallRepository();
+  final _wallService = WallService();
   late Future<List<Wall>> _wallsFuture;
 
   @override
@@ -25,6 +30,38 @@ class _WallListScreenState extends State<WallListScreen> {
     setState(() {
       _wallsFuture = _repository.getAllWalls();
     });
+  }
+
+  Future<void> _showImageSourceActionSheetAndCreateWall() async {
+    showModalBottomSheet(
+      context: context,
+      builder: (BuildContext context) {
+        return SafeArea(
+          child: Wrap(
+            children: <Widget>[
+              ListTile(
+                leading: const Icon(Icons.photo_library),
+                title: const Text('ギャラリーから選択'),
+                onTap: () async {
+                  Navigator.of(context).pop();
+                  await _wallService.createWallFromImage(ImageSource.gallery);
+                  _reloadWalls();
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.camera_alt),
+                title: const Text('写真を撮る'),
+                onTap: () async {
+                  Navigator.of(context).pop();
+                  await _wallService.createWallFromImage(ImageSource.camera);
+                  _reloadWalls();
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
   }
 
   @override
@@ -44,118 +81,96 @@ class _WallListScreenState extends State<WallListScreen> {
           if (walls.isEmpty) {
             return const Center(child: Text('登録された壁はありません'));
           }
-          return GridView.builder(
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2, // 2列表示
-              crossAxisSpacing: 8,
-              mainAxisSpacing: 8,
-              childAspectRatio: 0.75,
-            ),
-            itemCount: walls.length,
-            itemBuilder: (context, index) {
-              final wall = walls[index];
-              return Card(
-                clipBehavior: Clip.antiAlias,
-                child: Stack(
-                  fit: StackFit.expand,
-                  children: [
-                    Image.file(
-                      File(wall.imagePath),
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) =>
-                          const Icon(Icons.image_not_supported),
-                    ),
-                    Positioned(
-                      bottom: 0,
-                      left: 0,
-                      right: 0,
-                      child: Container(
-                        padding: const EdgeInsets.all(8.0),
-                        color: Colors.black54,
-                        child: Text(
-                          wall.name.isNotEmpty ? wall.name : 'ウォール #${wall.id}',
-                          style: TextStyle(
-                            color: wall.name.isNotEmpty
-                                ? Colors.white
-                                : Colors.grey[400],
-                            fontWeight: FontWeight.bold,
-                          ),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
+          return CustomScrollView(
+            slivers: [
+              SliverPadding(
+                padding: const EdgeInsets.all(8.0),
+                sliver: SliverMainAxisGroup(
+                  slivers: [
+                    SliverPadding(
+                      padding: const EdgeInsets.only(bottom: 8.0),
+                      sliver: SliverToBoxAdapter(
+                        child: AddWallCard(
+                          onTap: () async {
+                            await _showImageSourceActionSheetAndCreateWall();
+                          },
                         ),
                       ),
                     ),
-                    Material(
-                      color: Colors.transparent,
-                      child: InkWell(
-                        onTap: () async {
-                          await context.push('/walls/detail/${wall.id}');
-                          _reloadWalls(); // 詳細画面から戻ってきたときに再読込
-                        },
-                        onLongPress: () async {
-                          final messenger = ScaffoldMessenger.of(context);
+                    SliverGrid(
+                      gridDelegate:
+                          const SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 2, // 2列表示
+                            crossAxisSpacing: 8,
+                            mainAxisSpacing: 8,
+                            childAspectRatio: 0.75,
+                          ),
+                      delegate: SliverChildBuilderDelegate((context, index) {
+                        final wall = walls[index];
+                        return WallCard(
+                          wall: wall,
+                          onTap: () async {
+                            await context.push('/walls/detail/${wall.id}');
+                            _reloadWalls(); // 詳細画面から戻ってきたときに再読込
+                          },
+                          onLongPress: () async {
+                            final messenger = ScaffoldMessenger.of(context);
 
-                          final confirm = await showDialog<bool>(
-                            context: context,
-                            builder: (context) {
-                              return AlertDialog(
-                                title: const Text('削除の確認'),
-                                content: Text(
-                                  '「${wall.name.isNotEmpty ? wall.name : 'ウォール #${wall.id}'}」を削除しますか？',
-                                ),
-                                actions: [
-                                  TextButton(
-                                    onPressed: () =>
-                                        Navigator.pop(context, false),
-                                    child: const Text('キャンセル'),
+                            final confirm = await showDialog<bool>(
+                              context: context,
+                              builder: (context) {
+                                return AlertDialog(
+                                  title: const Text('削除の確認'),
+                                  content: Text(
+                                    '「${wall.name.isNotEmpty ? wall.name : 'ウォール #${wall.id}'}」を削除しますか？',
                                   ),
-                                  TextButton(
-                                    onPressed: () =>
-                                        Navigator.pop(context, true),
-                                    child: const Text('削除'),
-                                  ),
-                                ],
-                              );
-                            },
-                          );
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () =>
+                                          Navigator.pop(context, false),
+                                      child: const Text('キャンセル'),
+                                    ),
+                                    TextButton(
+                                      onPressed: () =>
+                                          Navigator.pop(context, true),
+                                      child: const Text('削除'),
+                                    ),
+                                  ],
+                                );
+                              },
+                            );
 
-                          if (confirm == true) {
-                            try {
-                              // 画像ファイルを削除
-                              final imageFile = File(wall.imagePath);
-                              if (await imageFile.exists()) {
-                                await imageFile.delete();
+                            if (confirm == true) {
+                              try {
+                                // 画像ファイルを削除
+                                final imageFile = File(wall.imagePath);
+                                if (await imageFile.exists()) {
+                                  await imageFile.delete();
+                                }
+
+                                // データベースから削除
+                                await _repository.deleteWall(wall.id);
+                                _reloadWalls();
+
+                                messenger.showSnackBar(
+                                  const SnackBar(content: Text('壁を削除しました')),
+                                );
+                              } catch (e) {
+                                messenger.showSnackBar(
+                                  SnackBar(content: Text('削除に失敗しました: $e')),
+                                );
                               }
-
-                              // データベースから削除
-                              await _repository.deleteWall(wall.id);
-                              _reloadWalls();
-
-                              messenger.showSnackBar(
-                                const SnackBar(content: Text('壁を削除しました')),
-                              );
-                            } catch (e) {
-                              messenger.showSnackBar(
-                                SnackBar(content: Text('削除に失敗しました: $e')),
-                              );
                             }
-                          }
-                        },
-                      ),
+                          },
+                        );
+                      }, childCount: walls.length),
                     ),
                   ],
                 ),
-              );
-            },
+              ),
+            ],
           );
         },
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () async {
-          await context.push('/walls/add');
-          _reloadWalls(); // 追加後に再読込
-        },
-        child: const Icon(Icons.add),
       ),
     );
   }

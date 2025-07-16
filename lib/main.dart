@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'core/router/app_router.dart';
+
+import 'package:borudaruma/core/router/app_router.dart';
 
 void main() {
   runApp(const BorudarumaApp());

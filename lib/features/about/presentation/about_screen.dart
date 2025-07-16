@@ -31,9 +31,9 @@ class _AboutScreenState extends State<AboutScreen> {
       appBar: AppBar(title: const Text('このアプリについて')),
       body: ListView(
         children: [
-          ListTile(
-            leading: const Icon(Icons.apps),
-            title: const Text('アプリ名'),
+          const ListTile(
+            leading: Icon(Icons.apps),
+            title: Text('アプリ名'),
             subtitle: Text('ボルダルマ'),
           ),
           ListTile(

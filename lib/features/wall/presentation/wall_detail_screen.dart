@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+
 import 'package:borudaruma/features/wall/presentation/widgets/wall_image_display.dart';
-import '../data/wall_repository.dart';
-import '../model/wall.dart';
+import 'package:borudaruma/features/wall/data/wall_repository.dart';
+import 'package:borudaruma/features/wall/model/wall.dart';
 
 class WallDetailScreen extends StatefulWidget {
   final int id;
